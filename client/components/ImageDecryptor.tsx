@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Unlock,
   KeyRound,
@@ -6,12 +6,7 @@ import {
   AlertTriangle,
   Download,
   Upload,
-  Eye,
-  ArrowRight,
-  ShieldCheck,
-  Cpu,
-  Layers,
-  FileCheck,
+  ShieldCheck
 } from "lucide-react";
 import type {
   KemKeyPair,
@@ -24,13 +19,11 @@ import { decryptImageWithWebCrypto } from "../crypto/webCryptoKemDem.js";
 interface ImageDecryptorProps {
   keyring: KemKeyPair[];
   activePackage: KemDemPackage | null;
-  onNavigateToTamper: () => void;
 }
 
 export const ImageDecryptor: React.FC<ImageDecryptorProps> = ({
   keyring,
   activePackage,
-  onNavigateToTamper,
 }) => {
   const [currentPackage, setCurrentPackage] = useState<KemDemPackage | null>(
     activePackage,
@@ -337,14 +330,14 @@ export const ImageDecryptor: React.FC<ImageDecryptorProps> = ({
                   {currentPackage.demPayload.aad && (
                     <div className="flex justify-between py-1 border-b border-slate-800/60">
                       <span className="text-slate-400">Authenticated AAD:</span>
-                      <span className="text-slate-300 font-mono text-[11px] truncate max-w-[200px]">
+                      <span className="text-slate-300 font-mono text-[11px] truncate max-w-50">
                         {currentPackage.demPayload.aad}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between py-1">
                     <span className="text-slate-400">Expected SHA-256:</span>
-                    <span className="text-slate-400 font-mono text-[10px] truncate max-w-[220px]">
+                    <span className="text-slate-400 font-mono text-[10px] truncate max-w-50">
                       {currentPackage.sourceImage.originalSha256}
                     </span>
                   </div>
@@ -495,25 +488,17 @@ export const ImageDecryptor: React.FC<ImageDecryptorProps> = ({
                 <Download className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Download Decrypted Image</span>
               </button>
-
-              <button
-                onClick={onNavigateToTamper}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs border border-amber-500/40 transition-colors"
-              >
-                <span>Test Attack in Tamper Lab</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
             </div>
           </div>
 
           {/* Decrypted Image Display */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-            <div className="flex items-center justify-center bg-slate-950/80 rounded-xl border border-slate-800 p-4 min-h-[300px]">
+            <div className="flex items-center justify-center bg-slate-950/80 rounded-xl border border-slate-800 p-4 min-h-75">
               <img
                 src={decryptionResult.decryptedDataUrl}
                 alt="Decrypted result"
                 referrerPolicy="no-referrer"
-                className="max-h-[280px] max-w-full rounded object-contain shadow-lg"
+                className="max-h-70 max-w-full rounded object-contain shadow-lg"
               />
             </div>
 
@@ -535,7 +520,7 @@ export const ImageDecryptor: React.FC<ImageDecryptorProps> = ({
                   </div>
                   <div className="flex justify-between py-1 border-b border-slate-800/80">
                     <span className="text-slate-400">Decrypted SHA-256:</span>
-                    <span className="text-cyan-300 truncate max-w-[200px]">
+                    <span className="text-cyan-300 truncate max-w-50">
                       {decryptionResult.decryptedSha256}
                     </span>
                   </div>

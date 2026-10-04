@@ -1,42 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { Header } from './components/Header.js';
-import { ImageEncryptor } from './components/ImageEncryptor.js';
-import { ImageDecryptor } from './components/ImageDecryptor.js';
-import { KeyManager } from './components/KeyManager.js';
-import { TamperLab } from './components/TamperLab.js';
-import { ArchitectureDiagram } from './components/ArchitectureDiagram.js';
-import { EntropyInspector } from './components/EntropyInspector.js';
-import type { KemKeyPair, KemDemPackage, SampleImage } from './types/crypto.js';
+import React, { useState, useEffect } from "react";
+import { Header } from "./components/Header.js";
+import { ImageEncryptor } from "./components/ImageEncryptor.js";
+import { ImageDecryptor } from "./components/ImageDecryptor.js";
+import { KeyManager } from "./components/KeyManager.js";
+import { EntropyInspector } from "./components/EntropyInspector.js";
+import type { KemKeyPair, KemDemPackage, SampleImage } from "./types/crypto.js";
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<
-    'encrypt' | 'decrypt' | 'keyring' | 'tamper' | 'architecture'
-  >('encrypt');
+  const [activeTab, setActiveTab] = useState<"encrypt" | "decrypt" | "keyring">(
+    "encrypt",
+  );
 
   const [keyring, setKeyring] = useState<KemKeyPair[]>([]);
-  const [activeRecipientKeyId, setActiveRecipientKeyId] = useState<string>('');
+  const [activeRecipientKeyId, setActiveRecipientKeyId] = useState<string>("");
   const [samples, setSamples] = useState<SampleImage[]>([]);
-  const [currentPackage, setCurrentPackage] = useState<KemDemPackage | null>(null);
+  const [currentPackage, setCurrentPackage] = useState<KemDemPackage | null>(
+    null,
+  );
 
   // Initialize samples and generate a default key pair on first launch
   useEffect(() => {
     // 1. Fetch pre-packaged sample images from server
-    fetch('/api/kem-dem/samples')
+    fetch("/api/kem-dem/samples")
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.samples) {
           setSamples(data.samples);
         }
       })
-      .catch((err) => console.error('Failed to load samples', err));
+      .catch((err) => console.error("Failed to load samples", err));
 
     // 2. Generate a default RSA-OAEP demo key pair so the app is instantly ready
-    fetch('/api/kem-dem/keygen', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    fetch("/api/kem-dem/keygen", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        algorithm: 'RSA-OAEP-2048',
-        label: 'Default Recipient Key (RSA-OAEP-2048)',
+        algorithm: "RSA-OAEP-2048",
+        label: "Default Recipient Key (RSA-OAEP-2048)",
       }),
     })
       .then((res) => res.json())
@@ -46,7 +46,7 @@ export const App: React.FC = () => {
           setActiveRecipientKeyId(data.keyPair.id);
         }
       })
-      .catch((err) => console.error('Failed to generate initial key', err));
+      .catch((err) => console.error("Failed to generate initial key", err));
   }, []);
 
   const handleAddKey = (newKey: KemKeyPair) => {
@@ -77,29 +77,26 @@ export const App: React.FC = () => {
 
       {/* Main Workspace Viewport */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-8">
-        {activeTab === 'encrypt' && (
+        {activeTab === "encrypt" && (
           <div className="space-y-6">
             <ImageEncryptor
               keyring={keyring}
               activeRecipientKeyId={activeRecipientKeyId}
               samples={samples}
               onPackageGenerated={handlePackageGenerated}
-              onNavigateToDecrypt={() => setActiveTab('decrypt')}
-              onNavigateToTamper={() => setActiveTab('tamper')}
+              onNavigateToDecrypt={() => setActiveTab("decrypt")}
             />
-            {currentPackage && <EntropyInspector currentPackage={currentPackage} />}
+            {currentPackage && (
+              <EntropyInspector currentPackage={currentPackage} />
+            )}
           </div>
         )}
 
-        {activeTab === 'decrypt' && (
-          <ImageDecryptor
-            keyring={keyring}
-            activePackage={currentPackage}
-            onNavigateToTamper={() => setActiveTab('tamper')}
-          />
+        {activeTab === "decrypt" && (
+          <ImageDecryptor keyring={keyring} activePackage={currentPackage} />
         )}
 
-        {activeTab === 'keyring' && (
+        {activeTab === "keyring" && (
           <KeyManager
             keyring={keyring}
             activeRecipientKeyId={activeRecipientKeyId}
@@ -108,12 +105,6 @@ export const App: React.FC = () => {
             onRemoveKey={handleRemoveKey}
           />
         )}
-
-        {activeTab === 'tamper' && (
-          <TamperLab currentPackage={currentPackage} keyring={keyring} />
-        )}
-
-        {activeTab === 'architecture' && <ArchitectureDiagram />}
       </main>
 
       {/* Minimal Footer */}

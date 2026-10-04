@@ -1,16 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Upload,
   Lock,
-  Cpu,
-  FileDigit,
   Download,
   ArrowRight,
-  ShieldCheck,
-  Zap,
-  Layers,
-  Sparkles,
-  Info,
   CheckCircle,
 } from "lucide-react";
 import type {
@@ -29,7 +22,6 @@ interface ImageEncryptorProps {
   samples: SampleImage[];
   onPackageGenerated: (pkg: KemDemPackage, visualNoiseBase64?: string) => void;
   onNavigateToDecrypt: () => void;
-  onNavigateToTamper: () => void;
 }
 
 export const ImageEncryptor: React.FC<ImageEncryptorProps> = ({
@@ -38,7 +30,6 @@ export const ImageEncryptor: React.FC<ImageEncryptorProps> = ({
   samples,
   onPackageGenerated,
   onNavigateToDecrypt,
-  onNavigateToTamper,
 }) => {
   // Input image state
   const [selectedImageSrc, setSelectedImageSrc] = useState<string>("");
@@ -378,7 +369,7 @@ export const ImageEncryptor: React.FC<ImageEncryptorProps> = ({
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className="group cursor-pointer border border-dashed border-slate-700/80 hover:border-cyan-500/80 bg-slate-950/60 rounded-xl p-5 text-center transition-all duration-150 flex flex-col items-center justify-center min-h-[220px]"
+              className="group cursor-pointer border border-dashed border-slate-700/80 hover:border-cyan-500/80 bg-slate-950/60 rounded-xl p-5 text-center transition-all duration-150 flex flex-col items-center justify-center min-h-55"
             >
               <input
                 ref={fileInputRef}
@@ -572,14 +563,6 @@ export const ImageEncryptor: React.FC<ImageEncryptorProps> = ({
                 <span>Go to Decryptor</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
-
-              <button
-                onClick={onNavigateToTamper}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs border border-amber-500/40 transition-colors"
-              >
-                <span>Test in Tamper Lab</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
             </div>
           </div>
 
@@ -601,12 +584,12 @@ export const ImageEncryptor: React.FC<ImageEncryptorProps> = ({
                   Entropy: {currentPackage.metrics.originalEntropy} bits/byte
                 </span>
               </div>
-              <div className="flex items-center justify-center bg-slate-900/60 rounded-lg p-2 min-h-[240px]">
+              <div className="flex items-center justify-center bg-slate-900/60 rounded-lg p-2 min-h-60">
                 <img
                   src={selectedImageSrc}
                   alt="Original preview"
                   referrerPolicy="no-referrer"
-                  className="max-h-[220px] max-w-full rounded object-contain"
+                  className="max-h-55 max-w-full rounded object-contain"
                 />
               </div>
               <div className="font-mono text-[10px] text-slate-500 truncate">
@@ -625,10 +608,10 @@ export const ImageEncryptor: React.FC<ImageEncryptorProps> = ({
                   (Maximal)
                 </span>
               </div>
-              <div className="flex items-center justify-center bg-slate-900/60 rounded-lg p-2 min-h-[240px]">
+              <div className="flex items-center justify-center bg-slate-900/60 rounded-lg p-2 min-h-60">
                 <canvas
                   ref={canvasRef}
-                  className="max-h-[220px] max-w-full rounded shadow-inner"
+                  className="max-h-55 max-w-full rounded shadow-inner"
                 />
               </div>
               <div className="flex items-center justify-between font-mono text-[10px] text-slate-400">
