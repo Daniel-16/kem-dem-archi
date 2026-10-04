@@ -1,6 +1,5 @@
 import type { SampleImage } from '../types/kemdem.js';
 
-// Clean SVG data URLs that render realistic test images
 const sample1Svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
   <rect width="400" height="400" fill="#090d16"/>
   <circle cx="200" cy="200" r="160" fill="#111827" stroke="#06b6d4" stroke-width="2"/>

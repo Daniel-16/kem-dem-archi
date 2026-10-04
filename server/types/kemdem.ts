@@ -95,7 +95,7 @@ export interface DecryptionResult {
 }
 
 export interface EntropyAnalysis {
-  entropy: number;       // Shannon entropy (0 to 8 bits/byte)
+  entropy: number;
   byteCount: number;
   histogram: {
     red: number[];

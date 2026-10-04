@@ -10,7 +10,6 @@ export function encryptPayload(
   const start = performance.now();
 
   if (algorithm === 'AES-256-GCM') {
-    // 96-bit (12-byte) IV is standard for AES-GCM
     const iv = crypto.randomBytes(12);
     const cipher = crypto.createCipheriv('aes-256-gcm', symmetricKey, iv);
 
@@ -20,7 +19,7 @@ export function encryptPayload(
 
     const encryptedChunks = [cipher.update(plaintext), cipher.final()];
     const ciphertext = Buffer.concat(encryptedChunks);
-    const tag = cipher.getAuthTag(); // 16 bytes
+    const tag = cipher.getAuthTag();
 
     const end = performance.now();
     return {

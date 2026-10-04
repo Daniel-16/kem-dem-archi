@@ -83,8 +83,6 @@ export function generateKemKeyPair(
     }
 
     case 'HYBRID-PQ': {
-      // Hybrid Post-Quantum: Uses NIST P-256 classical key pair combined with
-      // secondary lattice/PQ encapsulation metadata for quantum-resistant transition
       const { publicKey, privateKey } = crypto.generateKeyPairSync('ec', {
         namedCurve: 'prime256v1',
         publicKeyEncoding: { type: 'spki', format: 'pem' },
@@ -124,10 +122,8 @@ export function encapsulateKey(
   const start = performance.now();
 
   if (algorithm.startsWith('RSA-OAEP')) {
-    // Generate high-entropy 256-bit symmetric session key K (32 bytes)
     const symmetricKey = crypto.randomBytes(32);
 
-    // Encapsulate symmetric key using RSA-OAEP with SHA-256 hash
     const encryptedKeyBuffer = crypto.publicEncrypt(
       {
         key: publicKeyPem,
@@ -151,7 +147,6 @@ export function encapsulateKey(
       algorithm === 'ECDH-P256' ? 'prime256v1' :
       algorithm === 'ECDH-P384' ? 'secp384r1' : 'x25519';
 
-    // Generate ephemeral keypair (pk_e, sk_e)
     const ephemeral =
       namedCurve === 'x25519'
         ? crypto.generateKeyPairSync('x25519', {
@@ -167,13 +162,11 @@ export function encapsulateKey(
     const recipientPubKey = crypto.createPublicKey(publicKeyPem);
     const ephemeralPrivKey = crypto.createPrivateKey(ephemeral.privateKey);
 
-    // Compute raw ECDH shared secret Z
     const sharedSecret = crypto.diffieHellman({
       privateKey: ephemeralPrivKey,
       publicKey: recipientPubKey,
     });
 
-    // Derive DEM symmetric key using HKDF-SHA256
     const salt = crypto.randomBytes(16);
     const info = Buffer.from(`KEM-DEM-${algorithm}`, 'utf8');
     const symmetricKey = Buffer.from(
@@ -192,7 +185,6 @@ export function encapsulateKey(
   }
 
   if (algorithm === 'HYBRID-PQ') {
-    // Ephemeral P-256 + Ephemeral Quantum-resistant Lattice seed simulation
     const ephemeral = crypto.generateKeyPairSync('ec', {
       namedCurve: 'prime256v1',
       publicKeyEncoding: { type: 'spki', format: 'pem' },
@@ -207,9 +199,7 @@ export function encapsulateKey(
       publicKey: recipientPubKey,
     });
 
-    // Simulated ML-KEM/Kyber seed (32 bytes)
     const pqSeed = crypto.randomBytes(32);
-    // Combine classical and post-quantum secrets via Dual-HKDF combiner
     const combinedSecret = Buffer.concat([classicalSecret, pqSeed]);
     const salt = crypto.randomBytes(16);
     const info = Buffer.from('HYBRID-PQ-COMBINER-SHA256', 'utf8');
@@ -217,7 +207,6 @@ export function encapsulateKey(
       crypto.hkdfSync('sha256', combinedSecret, salt, info, 32)
     );
 
-    // Package both the ephemeral classical key and the simulated PQ ciphertext
     const cKemData = JSON.stringify({
       classicalEphemeralPem: ephemeral.publicKey,
       pqCiphertext: pqSeed.toString('base64'),
@@ -272,7 +261,6 @@ export function decapsulateKey(
       const recipientPrivKey = crypto.createPrivateKey(privateKeyPem);
       const ephemeralPubKey = crypto.createPublicKey(ephemeralPem);
 
-      // Compute identical raw ECDH shared secret Z
       const sharedSecret = crypto.diffieHellman({
         privateKey: recipientPrivKey,
         publicKey: ephemeralPubKey,

@@ -18,7 +18,6 @@ import type {
 
 const router = Router();
 
-// Helper to convert base64 or Data URL to Buffer
 function extractBufferFromDataUrl(dataUrl: string): Buffer {
   if (dataUrl.includes('base64,')) {
     const base64Data = dataUrl.split('base64,')[1];
@@ -27,9 +26,8 @@ function extractBufferFromDataUrl(dataUrl: string): Buffer {
   return Buffer.from(dataUrl, 'utf8');
 }
 
-// Generate high-contrast pseudo-noise preview from ciphertext bytes for UI rendering
 function generateNoiseDataUrlFromCiphertext(cipherBuffer: Buffer, width: number, height: number): string {
-  const pixelCount = Math.min(width * height, 160000); // 400x400 max
+  const pixelCount = Math.min(width * height, 160000);
   const rgbaBuffer = Buffer.alloc(pixelCount * 4);
 
   for (let i = 0; i < pixelCount; i++) {
@@ -40,11 +38,9 @@ function generateNoiseDataUrlFromCiphertext(cipherBuffer: Buffer, width: number,
     rgbaBuffer[i * 4 + 3] = 255;
   }
 
-  // Pack as uncompressed SVG data URL or raw RGBA base64
   return `data:application/octet-stream;base64,${rgbaBuffer.toString('base64')}`;
 }
 
-// 1. Generate KEM Key Pair
 router.post('/kem-dem/keygen', (req: Request, res: Response) => {
   try {
     const { algorithm = 'RSA-OAEP-2048', label } = req.body as {
@@ -59,7 +55,6 @@ router.post('/kem-dem/keygen', (req: Request, res: Response) => {
   }
 });
 
-// 2. Encrypt Image using KEM-DEM Pipeline
 router.post('/kem-dem/encrypt', (req: Request, res: Response) => {
   const pipelineStart = performance.now();
   try {
@@ -96,11 +91,8 @@ router.post('/kem-dem/encrypt', (req: Request, res: Response) => {
     const originalSha256 = crypto.createHash('sha256').update(imageBuffer).digest('hex');
     const originalEntropy = calculateBufferEntropy(imageBuffer);
 
-    // STAGE 1: KEM (Key Encapsulation Mechanism)
     const kemResult = encapsulateKey(kemAlgorithm, recipientPublicKeyPem);
 
-    // STAGE 2: DEM (Data Encapsulation Mechanism)
-    // Encrypt raw image payload with derived symmetric key
     const demResult = encryptPayload(demAlgorithm, kemResult.symmetricKey, imageBuffer, aad);
 
     const ciphertextBuffer = Buffer.from(demResult.ciphertext, 'base64');
@@ -158,7 +150,6 @@ router.post('/kem-dem/encrypt', (req: Request, res: Response) => {
   }
 });
 
-// 3. Decrypt Image using KEM-DEM Pipeline
 router.post('/kem-dem/decrypt', (req: Request, res: Response) => {
   const pipelineStart = performance.now();
   try {
@@ -174,7 +165,6 @@ router.post('/kem-dem/decrypt', (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'Missing recipientPrivateKeyPem' });
     }
 
-    // STAGE 1: KEM DECAPSULATION
     let symmetricKey: Buffer;
     let decapsulationTimeMs = 0;
     try {
@@ -197,7 +187,6 @@ router.post('/kem-dem/decrypt', (req: Request, res: Response) => {
       });
     }
 
-    // STAGE 2: DEM DECRYPTION & INTEGRITY VERIFICATION
     let decryptedBuffer: Buffer;
     let decryptionTimeMs = 0;
     try {
@@ -226,7 +215,6 @@ router.post('/kem-dem/decrypt', (req: Request, res: Response) => {
     const totalDecryptionTimeMs = Math.round((pipelineEnd - pipelineStart) * 100) / 100;
     const entropy = calculateBufferEntropy(decryptedBuffer);
 
-    // Reconstruct data URL based on mimeType
     const mime = kemDemPackage.sourceImage.mimeType || 'image/png';
     const decryptedDataUrl = `data:${mime};base64,${decryptedBuffer.toString('base64')}`;
 
@@ -247,7 +235,6 @@ router.post('/kem-dem/decrypt', (req: Request, res: Response) => {
   }
 });
 
-// 4. Tamper & Integrity Test Simulator (IND-CCA2 Demonstration)
 router.post('/kem-dem/tamper-test', (req: Request, res: Response) => {
   try {
     const {
@@ -264,20 +251,18 @@ router.post('/kem-dem/tamper-test', (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'Missing parameters' });
     }
 
-    // Clone package
     const tamperedPackage: KemDemPackage = JSON.parse(JSON.stringify(originalPackage));
 
     let tamperDescription = '';
 
     if (tamperTarget === 'KEM_HEADER') {
-      // Flip bits in c_kem base64
       const buf = Buffer.from(tamperedPackage.kemHeader.c_kem, 'base64');
-      buf[10] ^= 0x01; // flip 1 bit
+      buf[10] ^= 0x01;
       tamperedPackage.kemHeader.c_kem = buf.toString('base64');
       tamperDescription = 'Flipped 1 bit in KEM Encapsulated Key Header (c_kem)';
     } else if (tamperTarget === 'CIPHERTEXT') {
       const buf = Buffer.from(tamperedPackage.demPayload.ciphertext, 'base64');
-      buf[12] ^= 0x01; // flip 1 bit in payload
+      buf[12] ^= 0x01;
       tamperedPackage.demPayload.ciphertext = buf.toString('base64');
       tamperDescription = 'Flipped 1 bit in DEM Encrypted Image Payload (Ciphertext)';
     } else if (tamperTarget === 'IV') {
@@ -295,7 +280,6 @@ router.post('/kem-dem/tamper-test', (req: Request, res: Response) => {
       tamperDescription = 'Appended unauthorized metadata to Additional Authenticated Data (AAD)';
     }
 
-    // Attempt decapsulation
     let symmetricKey: Buffer | null = null;
     let failedPhase = '';
     let errorMessage = '';
@@ -349,7 +333,6 @@ router.post('/kem-dem/tamper-test', (req: Request, res: Response) => {
   }
 });
 
-// 5. Entropy & Histogram Analysis
 router.post('/kem-dem/entropy-analysis', (req: Request, res: Response) => {
   try {
     const { dataUrl } = req.body as { dataUrl: string };
@@ -364,7 +347,6 @@ router.post('/kem-dem/entropy-analysis', (req: Request, res: Response) => {
   }
 });
 
-// 6. List Pre-packaged Sample Images
 router.get('/kem-dem/samples', (_req: Request, res: Response) => {
   res.json({ success: true, samples: SAMPLE_IMAGES });
 });
