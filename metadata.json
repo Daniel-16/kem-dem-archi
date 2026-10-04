@@ -1,0 +1,6 @@
+{
+  "name": "KEM-DEM Image Cryptosystem",
+  "description": "Full-stack hybrid image encryption and decryption application implementing the Key Encapsulation Mechanism and Data Encapsulation Mechanism (KEM-DEM) architecture.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
