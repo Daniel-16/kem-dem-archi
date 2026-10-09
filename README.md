@@ -11,6 +11,33 @@ The app demonstrates the classic hybrid encryption pattern:
 
 This is primarily a learning and visualization project, not a hardened production cryptography library. It is designed to help users understand the difference between key establishment and bulk-data encryption, and to visually prove why AEAD and KEM/DEM patterns are important in modern secure systems.
 
+## Android mobile app
+
+The Expo + React Native app lives separately in [`mobile/`](./mobile/). The existing web app and Express API remain available; the mobile app performs key generation, encryption, decryption, entropy analysis, and tamper tests locally on the phone and does not call the API.
+
+The mobile build uses native cryptography, so it **cannot run in Expo Go**. Use an Expo development build for wireless development, or the preview profile for a standalone APK. Both can be built with EAS in the cloud; Android Studio is not required. An Expo account is needed for EAS builds. EAS cloud builds upload the mobile project source to Expo's build service; only run one if that is acceptable for this project.
+
+```bash
+cd mobile
+npm ci
+npx eas-cli login
+npx eas-cli build --platform android --profile development
+```
+
+Install the development APK on the phone, then start Metro from the `mobile/` folder:
+
+```bash
+npm start
+```
+
+Keep the phone and development computer on the same Wi-Fi network and open the development build to connect. To create an APK that runs without Metro:
+
+```bash
+npm run build:android:preview
+```
+
+The configured splash screen and app icon use the KEM-DEM mark. Local private keys are encrypted in app storage with a key kept in the device secure store; exporting a private PEM creates an unencrypted file. `HYBRID-PQ` is deliberately unavailable in the mobile app: the existing web/server mode with that name does not implement a real post-quantum KEM. The mobile app currently supports RSA-OAEP, ECDH P-256/P-384/X25519, AES-256-GCM, and ChaCha20-Poly1305.
+
 ## What the app does
 
 The UI lets you:
@@ -86,7 +113,8 @@ Supported KEM algorithms include:
 - `ECDH-P256`
 - `ECDH-P384`
 - `ECDH-X25519`
-- `HYBRID-PQ`
+
+The web/server API still exposes a legacy `HYBRID-PQ` demo option, but it is **not post-quantum cryptography**: its “PQ” input is only a random 32-byte value included in the package, not an ML-KEM encapsulation. Do not rely on that mode for post-quantum security. The mobile app omits it until a real, interoperable ML-KEM implementation is added.
 
 In the Node.js backend, this happens in `server/crypto/kem.ts`:
 

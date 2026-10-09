@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#081521"/>
+  <path d="M20 20h360v360H20z" fill="#0C2031" stroke="#42677E" stroke-width="2"/>
+  <path d="M40 40h320v320H40z" fill="url(#grid)"/>
+  <defs>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M20 0H0V20" fill="none" stroke="#234459" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <path d="M73 80h112v93H73zM220 80h103v70H220zM111 221h185v95H111z" fill="#164B68" stroke="#5DBBDE" stroke-width="3"/>
+  <circle cx="201" cy="195" r="19" fill="#FFC36E"/>
+  <path d="M201 173v-42m0 128v-45m-19-19h-51m121 0h-51" stroke="#F7C879" stroke-width="2"/>
+  <text x="48" y="350" fill="#B3D4E2" font-family="sans-serif" font-size="13">SECTOR 7G · ENGINEERING DEMO</text>
+</svg>

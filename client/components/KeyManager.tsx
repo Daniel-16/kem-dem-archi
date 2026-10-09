@@ -162,7 +162,7 @@ export const KeyManager: React.FC<KeyManagerProps> = ({
               <option value="ECDH-P256">ECDH NIST P-256 + HKDF (Fast & Modern)</option>
               <option value="ECDH-P384">ECDH NIST P-384 + HKDF (Top Secret Tier)</option>
               <option value="ECDH-X25519">ECDH Curve25519 + HKDF (Ultra-High Perf)</option>
-              <option value="HYBRID-PQ">HYBRID-PQ: NIST P-256 + Lattice ML-KEM</option>
+              <option value="HYBRID-PQ">HYBRID-PQ (demo placeholder, not post-quantum secure)</option>
             </select>
           </div>
 

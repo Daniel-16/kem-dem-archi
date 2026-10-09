@@ -91,8 +91,8 @@ export function generateKemKeyPair(
       publicKeyPem = publicKey;
       privateKeyPem = privateKey;
       keyDetails = {
-        namedCurve: 'P-256 + ML-KEM/Kyber-768 Combiner',
-        description: 'Hybrid Post-Quantum KEM combining NIST P-256 and Lattice ML-KEM with dual HKDF',
+        namedCurve: 'P-256 + random placeholder',
+        description: 'Demo-only P-256 combiner; the random placeholder is not ML-KEM or post-quantum secure',
       };
       break;
     }
