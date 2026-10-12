@@ -316,6 +316,9 @@ export default function App() {
   const [aad, setAad] = useState('');
   const [currentPackage, setCurrentPackage] = useState<KemDemPackage | null>(null);
   const [decryptedImage, setDecryptedImage] = useState<string | null>(null);
+  const [decryptedImageMatchesHash, setDecryptedImageMatchesHash] = useState<boolean | null>(
+    null,
+  );
   const [privatePem, setPrivatePem] = useState('');
   const [isWorking, setIsWorking] = useState(false);
   const [keyAlgorithm, setKeyAlgorithm] = useState<KemAlgorithm>('RSA-OAEP-2048');
@@ -396,6 +399,7 @@ export default function App() {
       });
       setCurrentPackage(null);
       setDecryptedImage(null);
+      setDecryptedImageMatchesHash(null);
       setTamperResult(null);
     } catch (error) {
       Alert.alert('Image could not be selected', errorMessage(error));
@@ -423,6 +427,7 @@ export default function App() {
       });
       setCurrentPackage(null);
       setDecryptedImage(null);
+      setDecryptedImageMatchesHash(null);
       setTamperResult(null);
     } catch (error) {
       Alert.alert('Sample image could not be loaded', errorMessage(error));
@@ -542,11 +547,15 @@ export default function App() {
       throw new Error('This device did not provide a temporary file directory.');
     }
     const uri = `${FileSystem.cacheDirectory}${name}`;
-    await FileSystem.writeAsStringAsync(uri, content);
-    if (!(await Sharing.isAvailableAsync())) {
-      throw new Error('The Android share sheet is not available on this device.');
+    try {
+      await FileSystem.writeAsStringAsync(uri, content);
+      if (!(await Sharing.isAvailableAsync())) {
+        throw new Error('The Android share sheet is not available on this device.');
+      }
+      await Sharing.shareAsync(uri, { mimeType, dialogTitle: `Share ${name}` });
+    } finally {
+      await FileSystem.deleteAsync(uri, { idempotent: true });
     }
-    await Sharing.shareAsync(uri, { mimeType, dialogTitle: `Share ${name}` });
   };
 
   const shareBinaryFile = async (
@@ -558,19 +567,23 @@ export default function App() {
       throw new Error('This device did not provide a temporary file directory.');
     }
     const uri = `${FileSystem.cacheDirectory}${name}`;
-    await FileSystem.writeAsStringAsync(uri, base64, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    if (!(await Sharing.isAvailableAsync())) {
-      throw new Error('The Android share sheet is not available on this device.');
+    try {
+      await FileSystem.writeAsStringAsync(uri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      if (!(await Sharing.isAvailableAsync())) {
+        throw new Error('The Android share sheet is not available on this device.');
+      }
+      await Sharing.shareAsync(uri, { mimeType, dialogTitle: `Share ${name}` });
+    } finally {
+      await FileSystem.deleteAsync(uri, { idempotent: true });
     }
-    await Sharing.shareAsync(uri, { mimeType, dialogTitle: `Share ${name}` });
   };
 
   const shareKey = async (key: KemKeyPair, kind: 'public' | 'private') => {
     const pem = kind === 'public' ? key.publicKeyPem : key.privateKeyPem;
     if (!pem) {
-      Alert.alert('No private key available', 'This keyring entry contains only a public key.');
+      Alert.alert('Key is not available', `This keyring entry does not contain its ${kind} key.`);
       return;
     }
     try {
@@ -610,6 +623,7 @@ export default function App() {
       });
       setCurrentPackage(nextPackage);
       setDecryptedImage(null);
+      setDecryptedImageMatchesHash(null);
       setTamperResult(null);
       setTab('decrypt');
     } catch (error) {
@@ -645,6 +659,7 @@ export default function App() {
       setCurrentPackage(imported);
       setPrivatePem('');
       setDecryptedImage(null);
+      setDecryptedImageMatchesHash(null);
       setTamperResult(null);
     } catch (error) {
       Alert.alert('Package import failed', errorMessage(error));
@@ -667,10 +682,13 @@ export default function App() {
     }
 
     setIsWorking(true);
+    setDecryptedImage(null);
+    setDecryptedImageMatchesHash(null);
     await new Promise<void>((resolve) => setTimeout(resolve, 40));
     try {
       const result = decryptImageOffline(currentPackage, keyPem);
       setDecryptedImage(result.decryptedBase64);
+      setDecryptedImageMatchesHash(result.isLosslessMatch);
       if (!result.isLosslessMatch) {
         Alert.alert(
           'Image decrypted, but hash differs',
@@ -732,7 +750,11 @@ export default function App() {
       Alert.alert('Matching private key required', 'Load the package recipient’s private key first.');
       return;
     }
-    setTamperResult(runTamperTest(currentPackage, keyPem, selectedTamper));
+    try {
+      setTamperResult(runTamperTest(currentPackage, keyPem, selectedTamper));
+    } catch (error) {
+      Alert.alert('Tamper test failed', errorMessage(error));
+    }
   };
 
   const tabs: { id: Tab; label: string }[] = [
@@ -948,10 +970,29 @@ export default function App() {
                       />
                     </View>
                     {decryptedImage ? (
-                      <View style={styles.resultCard}>
+                      <View
+                        style={[
+                          styles.resultCard,
+                          decryptedImageMatchesHash ? styles.resultGood : styles.resultWarning,
+                        ]}
+                      >
                         <View style={styles.resultHeading}>
-                          <View style={styles.successDot} />
-                          <Text style={styles.successTitle}>Authenticated and decrypted</Text>
+                          <View
+                            style={
+                              decryptedImageMatchesHash ? styles.successDot : styles.warningDot
+                            }
+                          />
+                          <Text
+                            style={
+                              decryptedImageMatchesHash
+                                ? styles.successTitle
+                                : styles.warningText
+                            }
+                          >
+                            {decryptedImageMatchesHash
+                              ? 'Authenticated; image hash verified'
+                              : 'Decrypted, but image hash mismatch'}
+                          </Text>
                         </View>
                         <Image
                           source={{
@@ -960,7 +1001,11 @@ export default function App() {
                           style={styles.decryptedPreview}
                           resizeMode="contain"
                         />
-                        <Text style={styles.bodyMuted}>SHA-256 verified against the package.</Text>
+                        <Text style={styles.bodyMuted}>
+                          {decryptedImageMatchesHash
+                            ? 'The image SHA-256 matches the value recorded in the package.'
+                            : 'The encrypted payload authenticated, but its SHA-256 does not match the package record. Package metadata may have been altered.'}
+                        </Text>
                         <ActionButton
                           title="Share decrypted image"
                           secondary
@@ -1439,8 +1484,10 @@ const styles = StyleSheet.create({
   resultCard: { padding: 12, borderRadius: 12, backgroundColor: '#0D282B', borderWidth: 1, borderColor: '#2B675C', marginTop: 14 },
   resultGood: { backgroundColor: '#0D282B', borderColor: '#2B675C' },
   resultBad: { backgroundColor: '#2C1C22', borderColor: '#72424B' },
+  resultWarning: { backgroundColor: '#30271D', borderColor: '#8A683A' },
   resultHeading: { flexDirection: 'row', alignItems: 'center' },
   successDot: { width: 8, height: 8, borderRadius: 5, backgroundColor: COLORS.green, marginRight: 8 },
+  warningDot: { width: 8, height: 8, borderRadius: 5, backgroundColor: COLORS.amber, marginRight: 8 },
   successTitle: { color: COLORS.green, fontSize: 12, fontWeight: '800' },
   errorTitle: { color: COLORS.red, fontSize: 12, fontWeight: '800' },
   decryptedPreview: { width: '100%', height: 220, marginVertical: 12, borderRadius: 10, backgroundColor: '#08131D' },

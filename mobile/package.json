@@ -18,6 +18,7 @@
     "react-native-quick-crypto": "^1.1.8"
   },
   "devDependencies": {
+    "@types/node": "^26.6.5",
     "@types/react": "~19.2.2",
     "typescript": "~6.0.3"
   },
@@ -27,7 +28,8 @@
     "ios": "expo start --dev-client",
     "web": "expo start --web",
     "build:android:development": "npx eas-cli build --platform android --profile development",
-    "build:android:preview": "npx eas-cli build --platform android --profile preview"
+    "build:android:preview": "npx eas-cli build --platform android --profile preview",
+    "build:android:production": "node scripts/run-eas-cli.cjs build --platform android --profile production"
   },
   "private": true
 }

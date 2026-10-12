@@ -42,10 +42,16 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Choose an image to encrypt locally on this device."
+          "photosPermission": "Choose an image to encrypt locally on this device.",
+          "microphonePermission": false
         }
       ],
       "react-native-quick-crypto"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8cf29e14-fa43-43bd-bcee-8c19d7451e0a"
+      }
+    }
   }
 }

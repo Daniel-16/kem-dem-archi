@@ -36,6 +36,12 @@ Keep the phone and development computer on the same Wi-Fi network and open the d
 npm run build:android:preview
 ```
 
+For a production-versioned APK that can be downloaded and installed directly:
+
+```bash
+npm run build:android:production
+```
+
 The configured splash screen and app icon use the KEM-DEM mark. Local private keys are encrypted in app storage with a key kept in the device secure store; exporting a private PEM creates an unencrypted file. `HYBRID-PQ` is deliberately unavailable in the mobile app: the existing web/server mode with that name does not implement a real post-quantum KEM. The mobile app currently supports RSA-OAEP, ECDH P-256/P-384/X25519, AES-256-GCM, and ChaCha20-Poly1305.
 
 ## What the app does
